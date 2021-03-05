@@ -39,6 +39,6 @@ optional arguments:
 
 **This program exploits primitive vulnerability and might not work on more advanced systems**  
 
-The project is based on the book *Black Hat Python: Python Programming for Hackers and Pentesters* by Justin Seitz. The code was converted to Python 3 and modified to use Python's `requests` package. Functionality of searching for multiple usernames was also added.  
+The project is based on the book *Black Hat Python: Python Programming for Hackers and Pentesters* by Justin Seitz. The code was converted to Python 3 and modified to use Python's `requests` package. Functionality of searching for multiple usernames and command line support was also added.  
 
 Code was implemented and tested with Python 3.9.2 on Debian 9.  
