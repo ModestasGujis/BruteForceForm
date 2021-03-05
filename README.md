@@ -7,13 +7,35 @@
 The program GETs the login page and saves all the gotten cookies. It then parses the HTML document and saves all the input fields with current values, thus, bypassing the [csrf validation](https://portswigger.net/web-security/csrf). After that it updates username and password fields with current guess. It then sends the request and checks the response against the `error_check`.  
 
 ### Usage  
-* Usernames are taken from `username_file`  
-* Passwords are taken from `wordlist_file`  
-* Found username and passwords matches are saved in `output_file`  
-* `target_url` is the url for GET request  
-* `target_post` is the url for POST request  
-* `username_field` and `password_field` are input field's names of username and password fields respectively, change them accordingly  
-* `error_check` is the text the website returns upon unsuccessful attempt. This text should not be contained in the successful request   
+```
+usage: ./BruteForceForm.py [-h] [--post post url] -u USERNAMES -w WORDLIST [-o OUTPUT] -e ERROR_CHECK [--username-field USERNAME_FIELD]
+                           [--password-field PASSWORD_FIELD]
+                           target_url
+
+Example commands:
+	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt -e "password didn't match"
+	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt --username-field user -e "password didn't match"
+	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt --post <post_url> -e "password didn't match"
+
+positional arguments:
+  target_url            url of target
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --post post url       url to post form (defaults to target_url)
+  -u USERNAMES, --usernames USERNAMES
+                        file with usernames
+  -w WORDLIST, --wordlist WORDLIST
+                        file with passwords
+  -o OUTPUT, --output OUTPUT
+                        file where found matches will be stored
+  -e ERROR_CHECK, --error-check ERROR_CHECK
+                        error check that should be not be present in response body upon success and present upon fail
+  --username-field USERNAME_FIELD
+                        name of username input field
+  --password-field PASSWORD_FIELD
+                        name of password input field
+```
 
 **This program exploits primitive vulnerability and might not work on more advanced systems**  
 

